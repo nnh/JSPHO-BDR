@@ -1,12 +1,12 @@
 # JSPHO年次集計 ver20170831
 # Mamiko Yonejima
 # 20170712
-
-kDateCutoff <- "20170531"
-kYear1 <- "2014"
-kYear2 <- "2015"
-kYear3 <- "2016"
-
+# *********************************
+kOrganization  <- "JSPHO"
+kDateCutoff <- "20180531"
+kYear <- "2017"
+prtpath <- "//192.168.200.222/Datacenter/学会事務/110_日本小児血液がん学会関連/03_データクリーニング資料/2018/集計"
+# *********************************
 # 関数の定義
 YearDif <- function(starting, ending) {
   # 2つの日付の年差（切り下げ）を計算する。startingに生年月日を指定すれば満年齢計算に使用可能。
@@ -15,8 +15,10 @@ YearDif <- function(starting, ending) {
 Sys.setlocale("LC_TIME", "C") #必須：日本時間にコンピュータ設定を合わせるforwindows
 
 # csv読み込み
-setwd("./rawdata") 
-list <- list.files()
+rawdatapath <- paste0(prtpath, "/rawdata")
+list <- list.files(rawdatapath)
+base_index <- grep(paste0("^", kOrganization, "_[0-9]{6}_[0-9]{4}"), list)
+base_csv <- read.csv(paste(rawdatapath, list[base_index], sep="/"), as.is=T)  #TODO ここから180622
 dl_data <- read.csv(list, as.is = T, na.strings = c(""))
 setwd("../input")
 list <- list.files()
@@ -27,7 +29,7 @@ for (i in 1:length(list)) {
 
 # adsの作成
 dl_data$year <- substr(dl_data$診断年月日, 1, 4)
-dl_data <- dl_data[!is.na(dl_data$year) & dl_data$year >= kYear1 &  dl_data$year <= kYear3, ]
+dl_data <- dl_data[!is.na(dl_data$year) & dl_data$year == kYear, ]
 
 # Cut dl_data /age diagnosis is over　20
 dl_data$age_diagnosis <- YearDif(dl_data$生年月日, dl_data$診断年月日)
