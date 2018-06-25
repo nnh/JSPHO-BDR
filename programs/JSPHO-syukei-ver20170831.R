@@ -17,28 +17,28 @@ Sys.setlocale("LC_TIME", "C") #必須：日本時間にコンピュータ設定�
 # csv読み込み
 rawdatapath <- paste0(prtpath, "/rawdata")
 list <- list.files(rawdatapath)
-base_index <- grep(paste0("^", kOrganization, "_[0-9]{6}_[0-9]{4}"), list)
-base_csv <- read.csv(paste(rawdatapath, list[base_index], sep="/"), as.is=T)  #TODO ここから180622
-dl_data <- read.csv(list, as.is = T, na.strings = c(""))
-setwd("../input")
-list <- list.files()
+registration_index <- grep(paste(kOrganization, "registration", sep="_"), list)
+registration_csv <- read.csv(paste(rawdatapath, list[registration_index], sep="/"), as.is=T, na.strings="")
+
+
+list <- list.files(paste0(prtpath, "/input"))
 df.name <- sub(".csv.*", "", list)  
 for (i in 1:length(list)) {
-     assign(df.name[i], read.csv(list[i], as.is=T, na.strings = c(""), fileEncoding='UTF-8-BOM'))
+     assign(df.name[i], read.csv(paste0(prtpath, "/input/", list[i]), as.is=T, na.strings = c(""), fileEncoding='UTF-8-BOM'))
     }
 
 # adsの作成
-dl_data$year <- substr(dl_data$診断年月日, 1, 4)
-dl_data <- dl_data[!is.na(dl_data$year) & dl_data$year == kYear, ]
+registration_csv$year <- substr(registration_csv$診断年月日, 1, 4)
+registration_csv <- registration_csv[!is.na(registration_csv$year) & registration_csv$year == kYear, ]
 
-# Cut dl_data /age diagnosis is over　20
-dl_data$age_diagnosis <- YearDif(dl_data$生年月日, dl_data$診断年月日)
-dl_data_20 <- dl_data[dl_data$age_diagnosis < 20, ]
+# Cut registration_csv /age diagnosis is over　20
+registration_csv$age_diagnosis <- YearDif(registration_csv$生年月日, registration_csv$診断年月日)
+registration_csv_20 <- registration_csv[registration_csv$age_diagnosis < 20, ]
 # 参加施設のみ抽出
-dl_data_shisetsu <- merge(dl_data_20, facilities2017, by.x = "field161", by.y = "Ptosh施設CD", all.x = T)
-dl_data_shisetsu  <- dl_data_shisetsu[!is.na(dl_data_shisetsu$施設CD), ]                    
+registration_csv_shisetsu <- merge(registration_csv_20, facilities2018, by.x = "field161", by.y = "Ptosh施設CD", all.x = T)
+registration_csv_shisetsu  <- registration_csv_shisetsu[!is.na(registration_csv_shisetsu$施設CD), ]                    
 # shimekiri Cut
-ads <-dl_data_shisetsu [format(as.Date(dl_data_shisetsu$作成日), "%Y%m%d") <= kDateCutoff , ]
+ads <-registration_csv_shisetsu [format(as.Date(registration_csv_shisetsu$作成日), "%Y%m%d") <= kDateCutoff , ]
 # category age diagnosis
 ads$cat_age_diagnosis <- cut(ads$age_diagnosis, breaks = c(0, 1, 5, 10, 15, 20),
                                      labels= c(" 0"," 1-4"," 5-9"," 10-14"," 15-19"), right=FALSE)
@@ -78,7 +78,7 @@ ads$small.class <- ifelse(ads$field7 == 1 & ads$field37 == 1, paste0("ALL.", ads
 # BRTHDTC, MHSTDTCが逆転している症例を除く
 ads <- ads[ads$生年月日 <= ads$診断年月日, ]
 # 集計
-years <- c(kYear1, kYear2, kYear3)
+# years <- c(kYear1, kYear2, kYear3)
 # facilities
 for(i in 1:2){
 dataframe <- ads[ads$field7 == i, ] 
@@ -97,17 +97,15 @@ by.facilities <- df_facilities[order(as.integer(df_facilities$shisetsu_code)),]
 assign(paste0("df", i), by.facilities )
 }
 res_by.facilities <- merge(df1, df2, by = c("shisetsu_code", "facilities_name", "department"), all = T) 
-colnames(res_by.facilities)[c(4:6)] <- paste("tumor",years)
-colnames(res_by.facilities)[c(8:10)] <- paste("non tumor",years)
-res_by.facilities_0 <- res_by.facilities[c(1:6, 8:10)]
+colnames(res_by.facilities)[4] <- paste("tumor",kYear)
+colnames(res_by.facilities)[6] <- paste("non tumor",kYear)
+res_by.facilities_0 <- res_by.facilities[c(1:4, 6)]
 res_by.facilities_0[is.na(res_by.facilities_0)] <- 0
 
 # disease
 for(i in 1:2){
-  for(j in 1:length(years)){
-dataframe <- ads[ads$field7 == i & ads$year == years[j], ]  # 集計年
-#dataframe <- ads[ads$field7 == 1 & ads$year == "2014", ] 
-# 中分類
+dataframe <- ads[ads$field7 == i & ads$year == kYear, ]  # 集計年
+
 # sex 
 middle.class.sex <- xtabs( ~ middle.class +  性別, data = dataframe) 
 mat_middle.class.sex <- matrix(middle.class.sex, nrow(middle.class.sex), ncol(middle.class.sex))
@@ -152,7 +150,7 @@ small <-cbind(merge_sex_area_small, mat_small.class.age)
 colnames(small) <- c("disease", name)
 results <- rbind(middle, small)
 results[is.na(results)] <- 0
-ifelse(i == 1, assign(paste0("tumor_results",  years[j]), results), assign(paste0("non_tumor_results", years[j]), results))
+ifelse(i == 1, assign(paste0("tumor_results",  kYear), results), assign(paste0("non_tumor_results", kYear), results))
 
 if(i == 2) next  # 非腫瘍性の場合 残りのループをスキップ
 syouai_kiso <- xtabs( ~ 血液腫瘍性疾患名 + 基礎疾患, data = dataframe)   
@@ -174,18 +172,12 @@ rownames(mat_syousai_niji) <- rownames(syousai_niji )
 colnames(mat_syousai_niji) <- colnames(syousai_niji )
 results_syousai <- merge(wrk_1_syousai, mat_syousai_niji , by.x = "Row.names", by.y = 0, all = T)
 results_syousai[is.na(results_syousai)] <- 0
-assign(paste0("syousai_results",  years[j]), results_syousai)
+assign(paste0("syousai_results",  kYear), results_syousai)
   }
-}
+
 # csvの書き出し
-setwd("../output")
+setwd(paste0(prtpath, "/output"))
 write.csv(res_by.facilities_0, "facilities_results.csv")
-for(i in 1:length(years)){
-  write.csv(eval(parse(text = paste0("tumor_results", years[i]))), eval(parse(text = paste0("'tumor_", years[i], ".csv'"))))
-}
-for(i in 1:length(years)){
-  write.csv(eval(parse(text = paste0("non_tumor_results", years[i]))), eval(parse(text = paste0("'non_tumor_", years[i], ".csv'"))))
-}
-for(i in 1:length(years)){
-  write.csv(eval(parse(text = paste0("syousai_results", years[i]))), eval(parse(text = paste0("'syousai_", years[i], ".csv'"))))
-}
+write.csv(eval(parse(text = paste0("tumor_results", kYear))), eval(parse(text = paste0("'tumor_", kYear, ".csv'"))))
+write.csv(eval(parse(text = paste0("non_tumor_results", kYear))), eval(parse(text = paste0("'non_tumor_", kYear, ".csv'"))))
+write.csv(eval(parse(text = paste0("syousai_results", kYear))), eval(parse(text = paste0("'syousai_", kYear, ".csv'"))))
