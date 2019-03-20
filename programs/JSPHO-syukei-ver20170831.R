@@ -1,4 +1,4 @@
-# JSPHO年次集計 ver.1.0
+# JSPHO-BDR 年次集計 ver.1.0
 # Mamiko Yonejima
 # ver.1.0 2017/8/31 created
 # *********************************
