@@ -46,150 +46,45 @@ ads_cleaning <- merge(registration_csv, Disease_Name_v2, by.x = "MHDECOD", by.y 
 # Cut registration_csv /age diagnosis is over　20
 ads <- ads_cleaning[ads_cleaning$age_diagnosis < 20, ]
                  
-#----------------kokokara
-
-
 # category age diagnosis
 ads$cat_age_diagnosis <- cut(ads$age_diagnosis, breaks = c(0, 1, 5, 10, 15, 20),
                                      labels= c(" 0"," 1-4"," 5-9"," 10-14"," 15-19"), right=FALSE)
 # chiku code
-ads$prefecture_cd <-  sub(".*-", "", ads$初発時住所)
+ads$prefecture_cd <-  sub(".*-", "", ads$field173)
 ads$JIScode <- floor(as.integer(ads$prefecture_cd)/1000)
 ads <- merge(ads, Prefecture, by = "JIScode", all.x = T)
 
-# 中分類病名変数を作成
-ads$middle.class <- ifelse(ads$field7 == 2, ads$非腫瘍性血液疾患名,
-                    ifelse(ads$field7 == 1 & ads$field37 == 4 & ads$field159 == 1, "CML",
-                    ifelse(ads$field7 == 1 & ads$field37 == 4 & ads$field159 == 2, "MDS・MPD(CMLを除く)", ads$血液腫瘍性疾患名)))
-# 小分類病名変数を作成
-ads$small.class <- ifelse(ads$field7 == 1 & ads$field37 == 1, paste0("ALL.", ads$ALL_免疫学的分類),
-                   ifelse(ads$field7 == 1 & ads$field37 == 2, paste0("AML.", ads$AML_FAB分類), 
-                   ifelse(ads$field7 == 1 & ads$field37 == 3, paste0("まれな白血病.", ads$疾患分類),
-                   ifelse(ads$field7 == 1 & ads$field37 == 4 & ads$field159 == 2 & ads$field164 ==3, paste0("MDS.", ads$MDS_WHO分類),
-                   ifelse(ads$middle.class == "CML", "CML",
-                   ifelse(ads$field7 == 1 & ads$field37 == 4 & ads$field159 == 2 & ads$field164 == 1, paste0("MPD.", ads$CMLを除くMPD_疾患名),
-                   ifelse(ads$field7 == 1 & ads$field37 == 4 & ads$field159 == 2 & ads$field164 == 2, paste0("MDS.MPD",ads$MDS.MPD_疾患名),
-                   ifelse(ads$field7 == 1 & ads$field37 == 5, paste0("NHL.",ads$NHL_病理診断),
-                   ifelse(ads$field7 == 1 & ads$field37 == 6, paste0("HL.",ads$HL_病理診断),
-                   ifelse(ads$field7 == 1 & ads$field37 == 8 & ads$field69 == 2, paste0("HLH.",ads$X2.HLH_原発性.続発性),
-                   ifelse(ads$field7 == 1 & ads$field37 == 8 & ads$field69 == 1, paste0("LCH.",ads$X1..1.LCH_病期),
-                   ifelse(ads$field7 == 2 & ads$field84 == 1, paste0("再生不良性貧血.", ads$再生不良性貧血),
-                   ifelse(ads$field7 == 2 & ads$field84 == 8, paste0("赤芽球癆.", ads$赤芽球癆),
-                   ifelse(ads$field7 == 2 & ads$field84 == 9, paste0("溶血性貧血.", ads$溶血性貧血),
-                   ifelse(ads$field7 == 2 & ads$field84 == 3, paste0("その他の貧血.", ads$その他の貧血),
-                   ifelse(ads$field7 == 2 & ads$field84 == 10, paste0("血小板機能異常症.", ads$血小板機能異常症),
-                   ifelse(ads$field7 == 2 & ads$field84 == 11, paste0("血小板減少症.", ads$血小板減少症),
-                   ifelse(ads$field7 == 2 & ads$field84 == 5, paste0("凝固異常.", ads$凝固異常),
-                   ifelse(ads$field7 == 2 & ads$field84 == 12, paste0("血栓傾向.", ads$血栓傾向),
-                   ifelse(ads$field7 == 2 & ads$field84 == 13, paste0("好中球減少症.", ads$好中球減少症),
-                   ifelse(ads$field7 == 2 & ads$field84 == 7, paste0("白血球機能異常.", ads$白血球機能異常),
-                   ifelse(ads$field7 == 2 & ads$field84 == 14, paste0("免疫不全症.", ads$免疫不全症),
-                   ifelse(ads$field7 == 2 & ads$field84 == 16, paste0("組織球性疾患.", ads$組織球性疾患), NA)))))))))))))))))))))))
 # BRTHDTC, MHSTDTCが逆転している症例を除く
 ads <- ads[ads$生年月日 <= ads$診断年月日, ]
+
 # 集計
-# years <- c(kYear1, kYear2, kYear3)
-# facilities
-for(i in 1:2){
-dataframe <- ads[ads$field7 == i, ] 
-dataframe$cd_facilities <- paste0(dataframe$field161, "_", dataframe$初発時施設名)
-facilities <- xtabs( ~ cd_facilities +  year, data = dataframe)
-mat_facilities <- matrix(facilities, nrow(facilities), ncol(facilities))
-rownames(mat_facilities) <- rownames(facilities)
-colnames(mat_facilities) <- colnames(facilities)
-df_facilities <- as.data.frame(mat_facilities)
-df_facilities$shisetsu_code <-  sub("_.*", "",  rownames(df_facilities))
-df_facilities$name_dep <- sub(".*_", "", rownames(df_facilities))
-df_facilities$facilities_name <- sub("-.*", "", df_facilities$name_dep)
-df_facilities$department <- sub(".*-", "",df_facilities$name_dep)
-by.facilities <- df_facilities[order(as.integer(df_facilities$shisetsu_code)),] 
-
-assign(paste0("df", i), by.facilities )
-}
-res_by.facilities <- merge(df1, df2, by = c("shisetsu_code", "facilities_name", "department"), all = T) 
-colnames(res_by.facilities)[4] <- paste("tumor",kYear)
-colnames(res_by.facilities)[6] <- paste("non tumor",kYear)
-res_by.facilities_0 <- res_by.facilities[c(1:4, 6)]
-res_by.facilities_0[is.na(res_by.facilities_0)] <- 0
-
-# disease
-for(i in 1:2){
-dataframe <- ads[ads$field7 == i & ads$year == kYear, ]  # 集計年
 
 # sex 
-middle.class.sex <- xtabs( ~ middle.class +  性別, data = dataframe) 
-mat_middle.class.sex <- matrix(middle.class.sex, nrow(middle.class.sex), ncol(middle.class.sex))
-rownames(mat_middle.class.sex) <- rownames(middle.class.sex)
+code_sex <- xtabs( ~ MHDECOD +  性別, data = ads) 
+mat_code_sex <- matrix(code_sex, nrow(code_sex ), ncol(code_sex ))
+rownames(mat_code_sex) <- rownames(code_sex)
 # area
-middle.class.area <- xtabs( ~ middle.class +  Area_name, data = dataframe) 
-mat_middle.class.area <- matrix(middle.class.area , nrow(middle.class.area ), ncol(middle.class.area ))
-rownames(mat_middle.class.area) <- rownames(middle.class.area )
+code_area <- xtabs( ~ MHDECOD +  Area_name, data = ads) 
+mat_code_area <- matrix(code_area , nrow(code_area), ncol(code_area))
+rownames(mat_code_area) <- rownames(code_area)
 # age
-middle.class.age <- xtabs( ~ middle.class + cat_age_diagnosis, data = dataframe) 
-mat_middle.class.age <- matrix(middle.class.age, nrow(middle.class.age), ncol(middle.class.age))
-rownames(mat_middle.class.age) <- rownames(middle.class.age)
+code_age <- xtabs( ~ MHDECOD + cat_age_diagnosis, data = ads) 
+mat_code_age  <- matrix(code_age , nrow(code_age ), ncol(code_age ))
+rownames(mat_code_age ) <- rownames(code_age )
 #マージとcolnameの整理
-name <- c(colnames(middle.class.sex), colnames(middle.class.area), colnames(middle.class.age))
-merge_sex_area <- merge(mat_middle.class.sex, mat_middle.class.area, by = 0, all = T)
+name <- c(colnames(code_sex), colnames(code_area), colnames(code_age))
+merge_sex_area <- merge(mat_code_sex, mat_code_area, by = 0, all = T)
+
 rownames(merge_sex_area) <- merge_sex_area[, 1]
 # merge_sex_area <- merge_sex_area[, 2:10]
 # middle <- merge(merge_sex_area, mat_middle.class.age, by = 0, all = T)
-middle <- cbind(merge_sex_area, mat_middle.class.age)
+middle <- cbind(merge_sex_area, mat_code_age)
 colnames(middle) <- c("disease", name)
 
-# 小分類
-# sex 
-small.class.sex <- xtabs( ~ small.class + 性別, data = dataframe)       
-mat_small.class.sex <- matrix(small.class.sex, nrow(small.class.sex), ncol(small.class.sex))
-rownames(mat_small.class.sex) <- rownames(small.class.sex)
-# area
-small.class.area <- xtabs( ~ small.class +  Area_name, data = dataframe) 
-mat_small.class.area <- matrix(small.class.area , nrow(small.class.area), ncol(small.class.area))
-rownames(mat_small.class.area) <- rownames(small.class.area )
-# age
-small.class.age <- xtabs( ~ small.class + cat_age_diagnosis, data = dataframe) 
-mat_small.class.age <- matrix(small.class.age, nrow(small.class.age), ncol(small.class.age))
-rownames(mat_small.class.age) <- rownames(small.class.age)
-#マージとcolnameの整理####
-name <- c(colnames(small.class.sex), colnames(small.class.area), colnames(small.class.age))
-merge_sex_area_small <- merge(mat_small.class.sex, mat_small.class.area, by = 0, all = T)
-rownames(merge_sex_area_small) <- merge_sex_area_small[, 1]
-# merge_sex_area_small <- merge_sex_area_small[, 2:8]
-# small <- merge(merge_sex_area_small, mat_small.class.age, by = 0, all = T)
-small <-cbind(merge_sex_area_small, mat_small.class.age)
-colnames(small) <- c("disease", name)
-results <- rbind(middle, small)
-results[is.na(results)] <- 0
-ifelse(i == 1, assign(paste0("tumor_results",  kYear), results), assign(paste0("non_tumor_results", kYear), results))
-
-if(i == 2) next  # 非腫瘍性の場合 残りのループをスキップ
-syouai_kiso <- xtabs( ~ 血液腫瘍性疾患名 + 基礎疾患, data = dataframe)   
-mat_syouai_kiso <- matrix(syouai_kiso, nrow(syouai_kiso), ncol(syouai_kiso))
-rownames(mat_syouai_kiso) <- rownames(syouai_kiso)
-colnames(mat_syouai_kiso) <- colnames(syouai_kiso)
-syouai_keishiki <- xtabs( ~ 血液腫瘍性疾患名 + 発病形式, data = dataframe)
-mat_syouai_keishiki <- matrix(syouai_keishiki, nrow(syouai_keishiki), ncol(syouai_keishiki))
-rownames(mat_syouai_keishiki) <- rownames(syouai_keishiki)
-colnames(mat_syouai_keishiki) <- colnames(syouai_keishiki)
-wrk_1_syousai <- merge(mat_syouai_kiso, mat_syouai_keishiki, by = 0, all = T)
-# mat_wrk_1_syousai <- matrix(wrk_1_syousai, nrow(wrk_1_syousai), ncol(wrk_1_syousai))
-# rownames(mat_wrk_1_syousai) <- rownames(wrk_1_syousai)
-# colnames(mat_wrk_1_syousai) <- colnames(wrk_1_syousai)
-niji <- dataframe[dataframe$field12 == 2, ]  # 二次性詳細
-syousai_niji <- xtabs( ~ 血液腫瘍性疾患名 + 発病形式_一次疾患名, data = niji)
-mat_syousai_niji  <- matrix(syousai_niji , nrow(syousai_niji ), ncol(syousai_niji ))
-rownames(mat_syousai_niji) <- rownames(syousai_niji )
-colnames(mat_syousai_niji) <- colnames(syousai_niji )
-results_syousai <- merge(wrk_1_syousai, mat_syousai_niji , by.x = "Row.names", by.y = 0, all = T)
-results_syousai[is.na(results_syousai)] <- 0
-assign(paste0("syousai_results",  kYear), results_syousai)
-  }
 
 # csvの書き出し
 setwd(paste0(prtpath, "/output"))
 ads_cleaning[is.na(ads_cleaning)] <- ""
 write.csv(ads_cleaning, "ads_cleaning.csv")
-write.csv(res_by.facilities_0, "facilities_results.csv")
-write.csv(eval(parse(text = paste0("tumor_results", kYear))), eval(parse(text = paste0("'tumor_", kYear, ".csv'"))))
-write.csv(eval(parse(text = paste0("non_tumor_results", kYear))), eval(parse(text = paste0("'non_tumor_", kYear, ".csv'"))))
-write.csv(eval(parse(text = paste0("syousai_results", kYear))), eval(parse(text = paste0("'syousai_", kYear, ".csv'"))))
+write.csv(middle, "results.csv", row.names = F)
+
