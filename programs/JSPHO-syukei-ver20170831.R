@@ -1,6 +1,6 @@
 # JSPHO年次集計 ver.1.0
 # Mamiko Yonejima
-# ver.1.0 20170831 created
+# ver.1.0 2017/8/31 created
 # *********************************
 kOrganization  <- "JSPHO"
 kDateCutoff <- "20180531"
