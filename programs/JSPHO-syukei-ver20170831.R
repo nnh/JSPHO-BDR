@@ -1,11 +1,13 @@
 # JSPHO-BDR 年次集計 ver.1.0
 # Mamiko Yonejima
 # ver.1.0 2017/8/31 created
+# ver.2.0 XXXX/XX/XX update
+
 # *********************************
 kOrganization  <- "JSPHO"
-kDateCutoff <- "20180531"
-kYear <- "2017"
-prtpath <- "//192.168.200.222/Datacenter/学会事務/110_日本小児血液がん学会関連/03_データクリーニング資料/2018/集計"
+kDateCutoff <- "20190531"
+kYear <- "2018"
+prtpath <- "//192.168.200.222/Datacenter/学会事務/110_日本小児血液がん学会関連/データクリーニング資料/2019/demo"
 # *********************************
 # 関数の定義
 YearDif <- function(starting, ending) {
@@ -28,17 +30,25 @@ for (i in 1:length(list)) {
     }
 
 # adsの作成
+# 診断年を抽出
 registration_csv$year <- substr(registration_csv$診断年月日, 1, 4)
 registration_csv <- registration_csv[!is.na(registration_csv$year) & registration_csv$year == kYear, ]
+# shimekiri Cut
+ads <-registration_csv [format(as.Date(registration_csv$作成日), "%Y%m%d") <= kDateCutoff , ]
+# age diagnosisを計算
+registration_csv$age_diagnosis <- YearDif(registration_csv$生年月日, registration_csv$診断年月日)
+# WHO2016のコードに置換する
+registration_csv$MHDECOD <- ifelse(nchar(registration_csv$field1) != 5, round(registration_csv$field1 * 10 + 10000, digits = 0)
+                                                                       , registration_csv$field1)
+# Disease Name v2をマージ
+ads_cleaning <- merge(registration_csv, Disease_Name_v2, by.x = "MHDECOD", by.y = "code", all.x = T)
 
 # Cut registration_csv /age diagnosis is over　20
-registration_csv$age_diagnosis <- YearDif(registration_csv$生年月日, registration_csv$診断年月日)
-registration_csv_20 <- registration_csv[registration_csv$age_diagnosis < 20, ]
-# 参加施設のみ抽出
-registration_csv_shisetsu <- merge(registration_csv_20, facilities2018, by.x = "field161", by.y = "Ptosh施設CD", all.x = T)
-registration_csv_shisetsu  <- registration_csv_shisetsu[!is.na(registration_csv_shisetsu$施設CD), ]                    
-# shimekiri Cut
-ads <-registration_csv_shisetsu [format(as.Date(registration_csv_shisetsu$作成日), "%Y%m%d") <= kDateCutoff , ]
+ads <- ads_cleaning[ads_cleaning$age_diagnosis < 20, ]
+                 
+#----------------kokokara
+
+
 # category age diagnosis
 ads$cat_age_diagnosis <- cut(ads$age_diagnosis, breaks = c(0, 1, 5, 10, 15, 20),
                                      labels= c(" 0"," 1-4"," 5-9"," 10-14"," 15-19"), right=FALSE)
@@ -177,6 +187,8 @@ assign(paste0("syousai_results",  kYear), results_syousai)
 
 # csvの書き出し
 setwd(paste0(prtpath, "/output"))
+ads_cleaning[is.na(ads_cleaning)] <- ""
+write.csv(ads_cleaning, "ads_cleaning.csv")
 write.csv(res_by.facilities_0, "facilities_results.csv")
 write.csv(eval(parse(text = paste0("tumor_results", kYear))), eval(parse(text = paste0("'tumor_", kYear, ".csv'"))))
 write.csv(eval(parse(text = paste0("non_tumor_results", kYear))), eval(parse(text = paste0("'non_tumor_", kYear, ".csv'"))))
