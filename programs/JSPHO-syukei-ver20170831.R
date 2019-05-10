@@ -7,7 +7,7 @@
 kOrganization  <- "JSPHO"
 kDateCutoff <- "20190531"
 kYear <- "2018"
-prtpath <- "//192.168.200.222/Datacenter/学会事務/110_日本小児血液がん学会関連/データクリーニング資料/2019/demo"
+prtpath <- "//192.168.200.222/Datacenter/学会事務/110_日本小児血液がん学会関連/04.03.02 データ集計/2019/4_二次集計"
 # *********************************
 # 関数の定義
 YearDif <- function(starting, ending) {
@@ -41,7 +41,9 @@ registration_csv$age_diagnosis <- YearDif(registration_csv$生年月日, registr
 registration_csv$MHDECOD <- ifelse(nchar(registration_csv$field1) != 5, round(registration_csv$field1 * 10 + 10000, digits = 0)
                                                                        , registration_csv$field1)
 # Disease Name v2をマージ
+registration_csv$MHDECOD <- ifelse(registration_csv$MHDECOD == 10930, 10931, registration_csv$MHDECOD) 
 ads_cleaning <- merge(registration_csv, Disease_Name_v2, by.x = "MHDECOD", by.y = "code", all.x = T)
+
 
 # Cut registration_csv /age diagnosis is over　20
 ads <- ads_cleaning[ads_cleaning$age_diagnosis < 20, ]
@@ -59,6 +61,7 @@ ads <- ads[ads$生年月日 <= ads$診断年月日, ]
 
 # 集計
 
+# 中分類集計
 # sex 
 code_sex <- xtabs( ~ MHDECOD +  性別, data = ads) 
 mat_code_sex <- matrix(code_sex, nrow(code_sex ), ncol(code_sex ))
@@ -80,6 +83,7 @@ rownames(merge_sex_area) <- merge_sex_area[, 1]
 # middle <- merge(merge_sex_area, mat_middle.class.age, by = 0, all = T)
 middle <- cbind(merge_sex_area, mat_code_age)
 colnames(middle) <- c("disease", name)
+
 
 
 # csvの書き出し
