@@ -5,7 +5,7 @@
 
 # *********************************
 kOrganization  <- "JSPHO"
-kDateCutoff <- "20190531"
+kDateCutoff <- "20190601"
 kYear <- "2018"
 prtpath <- "//192.168.200.222/Datacenter/学会事務/110_日本小児血液がん学会関連/04.03.02 データ集計/2019/4_二次集計"
 # *********************************
@@ -34,15 +34,16 @@ for (i in 1:length(list)) {
 registration_csv$year <- substr(registration_csv$診断年月日, 1, 4)
 registration_csv <- registration_csv[!is.na(registration_csv$year) & registration_csv$year == kYear, ]
 # shimekiri Cut
-ads <-registration_csv [format(as.Date(registration_csv$作成日), "%Y%m%d") <= kDateCutoff , ]
+registration_csv1 <-registration_csv[format(as.Date(registration_csv$作成日), "%Y%m%d") < kDateCutoff, ] 
+
 # age diagnosisを計算
-registration_csv$age_diagnosis <- YearDif(registration_csv$生年月日, registration_csv$診断年月日)
+registration_csv1$age_diagnosis <- YearDif(registration_csv1$生年月日, registration_csv1$診断年月日)
 # WHO2016のコードに置換する
-registration_csv$MHDECOD <- ifelse(nchar(registration_csv$field1) != 5, round(registration_csv$field1 * 10 + 10000, digits = 0)
-                                                                       , registration_csv$field1)
+registration_csv1$MHDECOD <- ifelse(nchar(registration_csv1$field1) != 5, round(registration_csv1$field1 * 10 + 10000, digits = 0)
+                                                                       , registration_csv1$field1)
 # Disease Name v2をマージ
-registration_csv$MHDECOD <- ifelse(registration_csv$MHDECOD == 10930, 10931, registration_csv$MHDECOD) 
-ads_cleaning <- merge(registration_csv, Disease_Name_v2, by.x = "MHDECOD", by.y = "code", all.x = T)
+registration_csv1$MHDECOD <- ifelse(registration_csv1$MHDECOD == 10930, 10931, registration_csv1$MHDECOD) 
+ads_cleaning <- merge(registration_csv1, Disease_Name_v2, by.x = "MHDECOD", by.y = "code", all.x = T)
 
 
 # Cut registration_csv /age diagnosis is over　20
