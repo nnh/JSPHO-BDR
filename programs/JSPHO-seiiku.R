@@ -42,5 +42,5 @@ dxt_jspho_registration$初発時住所_県名  <- ifelse(substr(dxt_jspho_regist
 dxt_jspho_registration$住所詳細 <- ifelse(substr(dxt_jspho_registration$住所, 4, 4) == "県", substr(dxt_jspho_registration$住所, 5, 100) , substr(dxt_jspho_registration$住所, 4, 100))
 
 ads <- dxt_jspho_registration[, c("登録コード", "初発時施設名", "シート作成時団体別施設コード", "作成日", "生死", "最終確認日", "和文名前の一文字目",
-                                  "性別", "生年月日", "診断年月日", )]
+                                  "性別", "生年月日", "診断年月日", "初発時住所_県名", "住所詳細")]
 
