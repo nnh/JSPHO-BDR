@@ -1,6 +1,6 @@
 # JSPHO-BDR seiiku
 # Mamiko Yonejima
-# ver.1.0 2019/8/9 created
+# 2019/8/9 created
 # *********************************
 kDateCutoff <- "20190601"
 kYear <- "2018"
