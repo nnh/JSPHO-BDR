@@ -5,9 +5,9 @@
 
 # *********************************
 kOrganization  <- "JSPHO"
-kDateCutoff <- "20200622"
-kYear <- "2019"
-prtpath <- "//192.168.200.222/Datacenter/Trials/JSPHO/Registry/04.03.02 データ集計/2020/二次集計"
+kDateCutoff <- "20210719"
+kYear <- "2020"
+prtpath <- "C:/Users/MamikoYonejima/Box/Datacenter/Trials/JSPHO/Registry/04.03.02 データ集計/2021/二次集計"
 # *********************************
 # 関数の定義
 YearDif <- function(starting, ending) {
