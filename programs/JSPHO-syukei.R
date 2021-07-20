@@ -5,7 +5,7 @@
 
 # *********************************
 kOrganization  <- "JSPHO"
-kDateCutoff <- "20210530"
+kDateCutoff <- "20210601"
 kYear <- "2020"
 prtpath <- "C:/Users/MamikoYonejima/Box/Datacenter/Trials/JSPHO/Registry/04.03.02 データ集計/2021/二次集計"
 # *********************************
