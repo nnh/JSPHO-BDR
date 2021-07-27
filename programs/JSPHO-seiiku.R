@@ -2,11 +2,11 @@
 # Mamiko Yonejima
 # 2019/8/9 created
 # *********************************
-kDateCutoff <- "20190601"
-kYear <- "2018"
-kJsphoCsv <- "JSPHO_190806_0937.csv"
-kJsphoRegistrationCsv <- "JSPHO_registration_190806_0937.csv"
-path <- "//192.168.200.222/Datacenter/学会事務/110_日本小児血液がん学会関連/04.03.02 データ集計/小児がん全数把握フォーマット/2019"
+kDateCutoff <- "20210601"
+kYear <- "2020"
+kJsphoCsv <- "JSPHO_210719_0853.csv"
+kJsphoRegistrationCsv <- "JSPHO_registration_210719_0853.csv"
+path <- "C:/Users/MamikoYonejima/Box/Datacenter/Trials/JSPHO/Registry/09.03.01 第三者機関とのコミュニケーション/小児がん全数把握フォーマット/2021"
 # *********************************
 # 関数の定義
 YearDif <- function(starting, ending) {
