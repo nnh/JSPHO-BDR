@@ -17,8 +17,8 @@ Sys.setlocale("LC_TIME", "C") #必須：日本時間にコンピュータ設定�
 
 # csv読み込み
 rawdatapath <- paste0(path , "/rawdata/")
-jspho_csv <- read.csv(paste0(rawdatapath, kJsphoCsv), as.is=T, fileEncoding="CP932", stringsAsFactors=F)
-jspho_registration_csv <- read.csv(paste0(rawdatapath, kJsphoRegistrationCsv), as.is=T, fileEncoding="CP932", stringsAsFactors=F)
+jspho_csv <- read.csv(paste0(rawdatapath, kJsphoCsv), as.is=T, fileEncoding="UTF-8-BOM", stringsAsFactors=F)
+jspho_registration_csv <- read.csv(paste0(rawdatapath, kJsphoRegistrationCsv), as.is=T, fileEncoding="UTF-8-BOM", stringsAsFactors=F)
 
 m_jspho_registration_csv <- merge(jspho_registration_csv, jspho_csv, by  = "登録コード", all.x = T )
 
@@ -35,7 +35,7 @@ dxt_jspho_registration <- jspho_registration_csv1[jspho_registration_csv1$診断
 dxt_jspho_registration$初発時住所_県名  <- ifelse(substr(dxt_jspho_registration$初発時住所, 4, 4) == "県",
                                            substr(dxt_jspho_registration$初発時住所, 1, 4) , substr(dxt_jspho_registration$初発時住所, 1, 3))
 
-#  
+#
 dxt_jspho_registration$住所詳細 <- ifelse(substr(dxt_jspho_registration$初発時住所, 4, 4) == "県", substr(dxt_jspho_registration$初発時住所, 5, 100) ,
                                       substr(dxt_jspho_registration$初発時住所, 4, 100))
 #血液腫瘍性疾患の症例とHLHを抽出
@@ -46,7 +46,7 @@ df_tumor_hlh <- rbind(df_tumor, df_hlh1)
 df_tumor_hlh$初発時施設コード3桁 <- NA
 
 ads <- df_tumor_hlh[, c("登録コード", "初発時施設名", "初発時施設コード3桁", "作成日", "生死", "最終確認日", "和文名前の一文字目",
-                    "性別", "生年月日", "診断年月日", "初発時住所_県名", "住所詳細", "診断時年齢", "診断名", "血液腫瘍性.疾患名", 
+                    "性別", "生年月日", "診断年月日", "初発時住所_県名", "住所詳細", "診断時年齢", "診断名", "血液腫瘍性.疾患名",
                     "ダウン症",　"ダウン症以外の基礎疾患",　"Fanconi貧血",　"Noonan症候群",　"神経線維腫症.NF1.",　"先天性角化不全症",　
                     "Shwachman.Diamond症候群",　"Diamond.Blackfan貧血",　"特発性再生不良性貧血",　"GATA2異常症",　"RUNX1異常症",
                     "重症先天性好中球減少症",　"その他の基礎疾患",　"発病形式",　"発病形式が二次性の場合.一次疾患名", "AML.FAB分類",
