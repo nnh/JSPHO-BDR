@@ -5,9 +5,9 @@
 
 # *********************************
 kOrganization  <- "JSPHO"
-kDateCutoff <- "20220601"
-kYear <- "2021"
-prtpath <- "C:/Users/MamikoYonejima/Box/Datacenter/Trials/JSPHO/Registry/10.03.10 データレビュー書/2022/二次集計/集計"
+kDateCutoff <- "20230601"
+kYear <- "2022"
+prtpath <- "C:/Users/MamikoYonejima/Box/Datacenter/Trials/JSPHO/Registry/10.03.10 データレビュー書/2023/二次集計"
 # *********************************
 
 library(tidyverse)
@@ -93,6 +93,6 @@ colnames(middle) <- c("disease", name)
 # csvの書き出し
 setwd(paste0(prtpath, "/output"))
 ads_cleaning[is.na(ads_cleaning)] <- ""
-write.csv(ads_cleaning, "ads_cleaning.csv")
-write.csv(middle, "results.csv", row.names = F)
+write.csv(ads_cleaning, "ads_cleaning.csv", fileEncoding="CP932")
+write.csv(middle, "results.csv", row.names = F, fileEncoding="CP932")
 
