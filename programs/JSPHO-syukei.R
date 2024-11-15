@@ -2,12 +2,13 @@
 # Mamiko Yonejima
 #  2017/8/31 created
 #  2019/8/19 update
+#  2024/8/14 update
 
 # *********************************
 kOrganization  <- "JSPHO"
-kDateCutoff <- "20230601"
-kYear <- "2022"
-prtpath <- "C:/Users/MamikoYonejima/Box/Datacenter/Trials/JSPHO/Registry/10.03.10 データレビュー書/2023/二次集計"
+kDateCutoff <- "20240601"
+kYear <- "2023"
+prtpath <- "C:/Users/MaikoEnomoto/Box/Datacenter/Trials/JSPHO/Registry/10.03.10 データレビュー書/2024/二次集計/program"
 # *********************************
 
 library(tidyverse)
@@ -29,8 +30,11 @@ registration_csv <- read_csv(paste0(rawdatapath, list[registration_index]))
 list <- list.files(paste0(prtpath, "/input"))
 df.name <- sub(".csv.*", "", list)
 for (i in 1:length(list)) {
-     assign(df.name[i], read.csv(paste0(prtpath, "/input/", list[i]), as.is=T, na.strings = c(""), fileEncoding='UTF-8-BOM'))
-    }
+  assign(df.name[i], read.csv(paste0(prtpath, "/input/", list[i]), as.is=T, na.strings = c(""), fileEncoding='UTF-8-BOM'))
+}
+
+# registration_csvから国外の症例を削除
+registration_csv <- registration_csv[registration_csv$初発時住所 != "国外 国外",]  # JSPHO国外削除
 
 # adsの作成
 # 診断年を抽出
@@ -43,7 +47,7 @@ registration_csv1 <-registration_csv[format(as.Date(registration_csv$作成日),
 registration_csv1$age_diagnosis <- YearDif(registration_csv1$生年月日, registration_csv1$診断年月日)
 # WHO2016のコードに置換する
 registration_csv1$MHDECOD <- ifelse(nchar(registration_csv1$field1) != 5, round(registration_csv1$field1 * 10 + 10000, digits = 0)
-                                                                       , registration_csv1$field1)
+                                    , registration_csv1$field1)
 # Disease Name v2をマージ
 registration_csv1$MHDECOD <- ifelse(registration_csv1$MHDECOD == 10930, 10931, registration_csv1$MHDECOD)
 ads_cleaning <- merge(registration_csv1, Disease_Name_v2, by.x = "MHDECOD", by.y = "code", all.x = T)
@@ -54,7 +58,7 @@ ads <- ads_cleaning[ads_cleaning$age_diagnosis < 20, ]
 
 # category age diagnosis
 ads$cat_age_diagnosis <- cut(ads$age_diagnosis, breaks = c(0, 1, 5, 10, 15, 20),
-                                     labels= c(" 0"," 1-4"," 5-9"," 10-14"," 15-19"), right=FALSE)
+                             labels= c(" 0"," 1-4"," 5-9"," 10-14"," 15-19"), right=FALSE)
 # chiku code
 ads$prefecture_cd <-  sub(".*-", "", ads$field173)
 ads$JIScode <- floor(as.integer(ads$prefecture_cd)/1000)
